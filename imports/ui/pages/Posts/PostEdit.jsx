@@ -14,6 +14,8 @@ export default class PostEdit extends React.Component {
         });
     }
 
+
+
     submit = (post) => {
      
         Meteor.call('secured.post_edit', this.props.match.params._id, post, (err) => {           
@@ -25,6 +27,9 @@ export default class PostEdit extends React.Component {
             alert('Post modified!')
         });
     };
+
+
+
 
     render() {
         const {history} = this.props;
@@ -40,7 +45,7 @@ export default class PostEdit extends React.Component {
               <AutoForm onSubmit={this.submit} schema={PostSchema}  model={post}>
                     <AutoField name="title"/>
                     <LongTextField name="description"/>
-<SelectField name="Posttype" type="string"   allowedValues={["Nature", "Psychology","Music","Programming","Project Management","Other"]}  />
+                    <SelectField name="Posttype" type="string"   allowedValues={["Nature", "Psychology","Music","Programming","Project Management","Other"]}  />
 
                     <button type='submit'>Edit post</button>
                     <button type='button' onClick={() => history.push('/posts')}>Back to posts</button>

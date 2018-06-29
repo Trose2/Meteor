@@ -6,7 +6,6 @@ import React from 'react';
 
 
 import { createContainer } from 'meteor/react-meteor-data';
-//import Donuts from '/imports/api/donuts/collection.js'
 class Home extends React.Component {
     render() {
         const {loading, donuts} = this.props;

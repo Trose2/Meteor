@@ -15,3 +15,8 @@ import Login from '/imports/ui/pages/Users/Login.jsx';
 route('/Login', Login);
 
 
+import PostList from '/imports/ui/pages/Posts/PostList';
+route  ('/posts',PostView);
+
+import PostView from '/imports/ui/pages/Posts/PostView';
+route ('/posts/View/:_id',PostView);

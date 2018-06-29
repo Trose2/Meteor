@@ -1,167 +1,89 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React from 'react';
 import {AutoForm, AutoField, LongTextField,SelectField } from 'uniforms-unstyled';
 import PostSchema from '/db/posts/schema';
 import CommentsSchema from '/db/comments/schema';
 import moment from 'moment';
+
 export default class PostView extends React.Component {
-    constructor(props) {
-        super(props);
-     this.state = {Comments: null};
-        this.state = {post: null};
-      this.state = {Comment: null};
-
-
-
-
-
-
-
+    constructor() {
+        super();
+        this.state = {comments: null};
+       
     }
 
-  submit = (Comment) => {
-      
-        Meteor.call('secured.comment_create', Comment,  this.props.match.params._id, this.userId, (err) => {           
- 
+
+      // Create Comment and update Comment count
+      submit = (Comment) => {
+         
+             
+        Meteor.call('secured.comment_create', Comment,  this.props.match.params._id,  (err) => {           
 
             if (err) {
- alert('error!');
+                
 
-alert(this.props.match.params._id);
-                return alert(err.reason);
+
+                    return alert(err.reason);
 
             }
 
 
 
+            //update comment state
+            Meteor.call('secured.comments_list',this.props.match.params._id, (err, comments) => {
+
+                if (err) {
+                   
+                    return alert(err.reason);
+                }
 
 
-
-Meteor.call('secured.post_get', this.props.match.params._id, (err, post) => {
-post.CommentCount= post.CommentCount +1;
-
-
- 
-
-
-Meteor.call('secured.post_edit', this.props.match.params._id, post, (err) => {           
-
-
-            if (err) {
-                return alert(err.reason);
-            }
-            
+                this.setState({comments});
+            });
+        
+            alert('comment created!');        
         });
-
-
-
-
-         
-        });
-
-
-
-
-
-
-
-
-
-
-
-
-
-            alert('comment created!');
-
-         
-
-        });
+   
     };
+    
+     
+
     componentDidMount() {
 
-
-
+        // Update views and fetch Post
+        Meteor.call('secured.post_get', this.props.match.params._id, (err, post) => {     
+        
+            post.views= post.views +1;
        
-Meteor.call('secured.post_get', this.props.match.params._id, (err, post) => {
-post.views= post.views +1;
+            Meteor.call('secured.post_edit', this.props.match.params._id, post, (err) => {           
 
 
- 
+                if (err) {
+                   alert(post._id);
+                    return alert(err.reason);
+                }
+            
+            });
+                this.setState({post}); 
+        });
 
 
-Meteor.call('secured.post_edit', this.props.match.params._id, post, (err) => {           
 
+
+        //fetch Comments
+        Meteor.call('secured.comments_list',this.props.match.params._id, (err, comments) => {
 
             if (err) {
-                return alert(err.reason);
-            }
-            
-        });
-
-
-
-
-            this.setState({post});
-        });
-
-
-
-
-
-Meteor.call('secured.comments_list',this.props.match.params._id, (err, Comments) => {
-
- if (err) {
-
-
-alert(this.props.match.params._id);
+                alert(this.props.match.params._id);
                 return alert(err.reason);
             }
 
 
- this.setState({Comments});
-});
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
+            this.setState({comments});
+        });
 
 
 
     }
-
-    
-
-
-
-
-
-
-
 
 
 
@@ -169,12 +91,13 @@ alert(this.props.match.params._id);
         const {history} = this.props;
         const {post} = this.state;
         const {Comment} = this.state;
-        const {Comments}= this.state;
+        const {comments}= this.state;
+         
         if (!post) {
             return <div>Loading  </div>
         }
 
-          if (!Comments) {
+          if (!comments) {
             return <div>Loading....</div>
         }   
 
@@ -183,189 +106,83 @@ alert(this.props.match.params._id);
         return (
           
                <div className="Comment">    
-        <p>Post Title: {post.title} </p>           
-         <p>Post id: {post._id} </p>
-          <p> Views  {post.views} </p>
+               <p >Post Title: {post.title} </p>           
+               <p> Views  {post.views} Posted {JSON.stringify(post.CreatedAt).slice(1,11)}</p>
+               <p>Type:{post.Posttype}</p>
+               <p>Description</p>
+               <p className="TextBox">  {post.description}</p>
+               <p> Comments</p>
 
-          <p>Type:{post.Posttype}</p>
-          <p> Description: {post.description}</p>
-                  
-                
-                
-
+            {
 
 
+            comments.map((Comment) => {  
+                return (
+
+                    <div key={Comment._id}> 
+                              
+                       <p className="TextBox"> {Comment.commentText} </p>                          
+                       <p>UserEmail: {Comment.userEmail}</p>
+                     
+                         <button onClick={() =>{Meteor.call('secured.Comment_remove', Comment._id, this.props.match.params._id, post.userId, (err) => {
+               
+                           if (err) {
+                               alert('Error!')
+                               return alert(err.reason);
+                           }
+
+                             // update comment
+                           Meteor.call('secured.comments_list',this.props.match.params._id, (err, comments) => {
+
+                               if (err) {
+                                    alert(this.props.match.params._id);
+                               return alert(err.reason);
+                           }
 
 
+                        this.setState({comments});
+                    });
+                           alert('Comment deleted!')
+                      });
+                      }
 
+                      } > Delete Comment </button>
+                     
+                    </div>
+                    )
+             })
 
-
-
-
-
-
-
-
-{
-
-
-
-Comments.map((Comment) => {  
-                        return (
-                            <div key={Comment._id}>
-                               
-                                 <p> {Comment.commentText} </p>
-                                 <p> PostId: {Comment.PostId}</p>
-                              <p>UserId: {Comment.userId}</p>
-                                   <p>UserEmail: {Comment.userEmail}</p>
-                               
-
-
-<button onClick={() =>{Meteor.call('secured.Comment_remove', Comment._id, (err) => {
-  
-
-
-Meteor.call('secured.comments_count', this.props.match.params._id, (err,CommentCount) => {
-
-
-
-
-
-Meteor.call('secured.post_get', this.props.match.params._id, (err, post) => {
-post.CommentCount= CommentCount;
+         }
 
 
  
-
-
-Meteor.call('secured.post_edit', this.props.match.params._id, post, (err) => {           
-
-
-            if (err) {
-                return alert(err.reason);
-            }
-            
-
-        });
-
-
-
-}); 
-        
-
-
-
-
-
-
-
-
-
-
-});
-         if (err) {
-               alert('Error!')
-                return alert(err.reason);
-            }
-            alert('Comment deleted!')
-        });
-                        }
-
-         } > Delete Comment
-    </button>
-
-
-
-
-
-                            </div>
-                        )
-                    } )
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-              <AutoForm onSubmit={this.submit} schema={CommentsSchema}>
+          <AutoForm onSubmit={this.submit}  schema={CommentsSchema}>
                     
-                    <LongTextField name="commentText"/>
+               <LongTextField name="commentText"/>                    
+               <button type='submit' name= 'action' value='createcomment'>Add Comment</button>
+               <button type='button' onClick={() => history.push('/posts')}>Back to posts</button>
+              
+
+         </AutoForm>
+         <p></p>
+         <button onClick={() =>{Meteor.call('secured.post_remove', this.props.match.params._id, this.props.match.params._id, (err) => {
                     
-
-                    <button type='submit'>Add Comment</button>
-                    <button type='button' onClick={() => history.push('/posts')}>Back to posts</button>
-                
-
-
-
-
-
-<button onClick={() =>{Meteor.call('secured.post_remove', this.props.match.params._id, (err) => {
-
-            if (err) {
-                return alert(err.reason);
-            }
-            alert('Post deleted!')
-        });
-                        }
-
-         } > Delete Post
-    </button>
+              if (err) {
+                  return alert(err.reason);
+              }
+                                     
+               alert('Post deleted!');
+               history.push('/posts'); 
+          });
+          }
+          } > Delete Post
+          </button>
 
 
 
-
-
-
-</AutoForm>
-
-
-
-
-
-
-
-            </div>
-        )
+     </div>
+    )
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
